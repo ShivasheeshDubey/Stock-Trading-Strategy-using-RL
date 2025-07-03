@@ -1,48 +1,87 @@
-Q-Learning Based Financial Trading Strategy with Hyperparameter Optimization
+# Q-Learning Based Stock Trading Strategy (with Optuna Hyperparameter Optimization)
 
-A reinforcement learning framework to optimize a trading strategy using **Q-Learning** with discrete state-action representation, applied to **NIFTYBEES ETF** data. Hyperparameters like learning rate (`alpha`) and discount factor (`gamma`) are optimized using **Optuna**, aiming to **maximize final portfolio returns**.
-
-Designed with simplicity, speed, and practical impact.
-
-
-Objective
-
-This project explores whether a **Q-learning agent** can learn profitable trading behavior using minimal signals (like 5-day moving averages) in Indian equity markets. The approach includes:
-
-- Constructing a **discrete environment** with hand-crafted state representations
-- Training with **reward as portfolio value**
-- Tuning learning parameters (`α`, `γ`) using **Optuna**
-- Testing on out-of-sample financial data
-
-
-
-Key Features
-
-| Component                 | Description                                                                 |
-|--------------------------|-----------------------------------------------------------------------------|
-| **Algorithm**            | Tabular Q-Learning (Buy / Sell / Hold)                                     |
-| **State Space**          | `4` states from binary momentum (`u`) and position (`t`)                   |
-| **Reward**               | Total portfolio value (absolute INR)                                       |
-| **Data**                 | `NIFTYBEES.NS` via `yfinance` (2016–2025 split)                             |
-| **Tuning Framework**     | `Optuna` used to optimize `alpha` and `gamma`                               |
-| **Performance Speed-up** | Full vectorization using `NumPy` + progress bar using `tqdm`               |
+This project implements a **Q-Learning-based trading agent** that learns to trade the Indian stock market ETF — **NIFTYBEES** — using minimal features. It uses **tabular reinforcement learning**, and hyperparameters are tuned using **Optuna**, a powerful Bayesian optimization library.
 
 ---
 
-##State & Action Design
+## Problem Statement
 
-- **State (`s`)**: Tuple of momentum signal (`u`) × position (`t`), i.e., 4 states total  
-  - `u = 1` if `Close > MA5`, else `0`
-  - `t = 1` if holding stock, else `0`
-- **Actions (`a`)**:
-  - `0 = Buy`, `1 = Sell`, `2 = Hold`
+Can a simple reinforcement learning agent, with discrete state space and minimal market signal (5-day moving average), learn to make profitable trades in the Indian equity market?
 
 ---
 
-##Hyperparameter Search
+## Key Highlights
 
-We define:
+- **Reinforcement Learning** using Q-Learning (discrete agent)
+- **Trading Strategy**: Buy, Sell, Hold decisions on NIFTYBEES
+- **Feature**: Simple 5-day moving average-based momentum signal
+- **Hyperparameter Tuning**: Optuna optimization for `alpha` (learning rate) and `gamma` (discount factor)
+- **Backtested** on real stock data (2016–2025 split)
 
-```python
-alpha ∈ [0.01, 0.99]      # Learning rate
-gamma ∈ [0.01, 0.99]      # Discount factor
+---
+
+## Algorithm Design
+
+### State Space (`4` states total)
+
+Each state is a combination of:
+
+| Feature         | Values | Description                         |
+|----------------|--------|-------------------------------------|
+| Momentum `u`   | 0 or 1 | 1 if price > MA5                    |
+| Position `t`   | 0 or 1 | 1 if holding stock, else 0          |
+| Final state ID | 0–3    | Computed as `u * 2 + t`             |
+
+---
+
+### Action Space
+
+| Action | Description          |
+|--------|----------------------|
+| 0      | Buy (All-in)         |
+| 1      | Sell (All-out)       |
+| 2      | Hold (Do nothing)    |
+
+---
+
+## Reward Function
+
+The reward at each step is defined as the **total portfolio value (cash + stock)**, encouraging long-term wealth accumulation.
+
+---
+
+## Data Preparation
+
+| Dataset   | Source     | Range            |
+|-----------|------------|------------------|
+| Train     | NIFTYBEES  | 2016–2020        |
+| Test      | NIFTYBEES  | 2021–2025        |
+
+Data is pulled using the `yfinance` API and cleaned to compute:
+
+- **5-day moving average**
+- **Binary momentum signal (`u`)**
+
+---
+
+## Hyperparameter Optimization
+
+### Optimized Parameters:
+
+| Parameter | Range        | Description              |
+|-----------|--------------|--------------------------|
+| `alpha`   | 0.01 – 0.99  | Learning rate            |
+| `gamma`   | 0.01 – 0.99  | Discount factor          |
+
+We use `Optuna` to **maximize** final portfolio value over test set.
+
+---
+
+## ⚙️ How to Run
+
+### Requirements
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
